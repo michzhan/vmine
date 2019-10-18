@@ -36,7 +36,7 @@ camouflage=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
 
 #从VERSION中提取发行版系统的英文名称，为了在debian/ubuntu下添加相对应的Nginx apt源
 source /etc/os-release
-VERSION=`echo ${VERSION} | awk -F "[()]" '{print $2}'
+VERSION=`echo ${VERSION} | awk -F "[()]" '{print $2}'`
 
 judge(){
     if [[ $? -eq 0 ]];then
@@ -105,11 +105,15 @@ dependency_install(){
        touch /var/spool/cron/root && chmod 600 /var/spool/cron/root
        systemctl start crond && systemctl enable crond
     else
-       touch /var/spool/cron/crontabs/root && chmod 600 /var/spool/cron/crontabs/root
-       systemctl start cron && systemctl enable cron
+       if [[ -f /var/spool/cron/crontabs/root]]; then
+           # Do nothing
+       else
+           touch /var/spool/cron/crontabs/root && chmod 600 /var/spool/cron/crontabs/root
+           systemctl start cron && systemctl enable cron
+       fi
 
     fi
-    judge "crontab 自启动配置 "
+    #judge "crontab 自启动配置 "
 
 
     # if [[ "${ID}" == "centos" ]];then
@@ -346,7 +350,7 @@ web_camouflage(){
     wget --no-check-certificate https://github.com/michzhan/vmine/raw/master/web/webpages.tar.gz
     tar zxvf webpages.tar.gz
     rm -rf /www
-    cp ~/webpages /www
+    cp -r ~/webpages /www
     chmod -R 777 /www
 }
 
@@ -443,3 +447,25 @@ start_process_systemd(){
     judge "设置 v2ray 开机自启"
 }
 
+
+main(){
+    is_root
+    check_system
+    dependency_install
+    chrony_install
+    basic_optimization
+    domain_check
+    port_alterid_set
+    port_exist_check 80
+    port_exist_check ${port}
+    nginx_install
+    v2ray_install
+    nginx_conf_add
+    v2ray_conf_add
+    web_camouflage
+
+    ssl_judge_and_install
+    nginx_systemd
+    show_information
+    start_process_systemd
+}
