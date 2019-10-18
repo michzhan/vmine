@@ -66,11 +66,6 @@ check_system(){
         echo -e "${OK} ${GreenBG} 当前系统为 Debian ${VERSION_ID} ${VERSION} ${Font}"
         INS="apt"
         $INS update
-        ## 添加 Nginx apt源
-        ## http://nginx.org/en/linux_packages.html
-        echo "deb http://nginx.org/packages/mainline/debian `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
-        curl -fsSL https://nginx.org/keys/nginx_signing.key | apt-key add -
-        echo -e "${OK} ${GreenBG} 添加 Nginx apt源 成功 ${Font}"
     elif [[ "${ID}" == "ubuntu" && `echo "${VERSION_ID}" | cut -d '.' -f1` -ge 16 ]];then
         echo -e "${OK} ${GreenBG} 当前系统为 Ubuntu ${VERSION_ID} ${UBUNTU_CODENAME} ${Font}"
         INS="apt"
@@ -105,7 +100,7 @@ dependency_install(){
        touch /var/spool/cron/root && chmod 600 /var/spool/cron/root
        systemctl start crond && systemctl enable crond
     else
-       if [[ -f "/var/spool/cron/crontabs/root"]];then
+       if [[ -f "/var/spool/cron/crontabs/root" ]];then
            # Do nothing
 	   echo ""
        else
@@ -239,6 +234,11 @@ port_exist_check(){
 
 nginx_install(){
     # 使用repo安装
+    ## http://nginx.org/en/linux_packages.html
+    echo "deb http://nginx.org/packages/mainline/debian `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
+    curl -fsSL https://nginx.org/keys/nginx_signing.key | apt-key add -
+    echo -e "${OK} ${GreenBG} 添加 Nginx apt源 成功 ${Font}"
+    
     ${INS} update
     ${INS} install nginx -y
     if [[ -d /etc/nginx ]];then
@@ -451,8 +451,8 @@ start_process_systemd(){
 
 main(){
     is_root
-    dependency_install
     check_system
+    dependency_install
     chrony_install
     basic_optimization
     domain_check
