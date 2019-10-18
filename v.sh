@@ -105,8 +105,9 @@ dependency_install(){
        touch /var/spool/cron/root && chmod 600 /var/spool/cron/root
        systemctl start crond && systemctl enable crond
     else
-       if [[ -f /var/spool/cron/crontabs/root]]; then
+       if [[ -f "/var/spool/cron/crontabs/root"]];then
            # Do nothing
+	   echo ""
        else
            touch /var/spool/cron/crontabs/root && chmod 600 /var/spool/cron/crontabs/root
            systemctl start cron && systemctl enable cron
