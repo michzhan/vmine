@@ -451,8 +451,8 @@ start_process_systemd(){
 
 main(){
     is_root
-    check_system
     dependency_install
+    check_system
     chrony_install
     basic_optimization
     domain_check
