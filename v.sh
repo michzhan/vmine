@@ -332,7 +332,7 @@ judge "Nginx 配置修改"
 
 v2ray_conf_add(){
     cd /etc/v2ray
-    wget https://raw.githubusercontent.com/wulabing/V2Ray_ws-tls_bash_onekey/master/tls/config.json -O config.json
+    wget https://raw.githubusercontent.com/michzhan/vmine/master/config/config.json -O config.json
     modify_port_UUID
     judge "V2ray 配置修改"
 }
@@ -343,7 +343,7 @@ web_camouflage(){
     #x git clone https://github.com/eyebluecn/levis.git
     #x judge "web 站点伪装"   
     cd ~
-    wget --no-check-certificate https://git.weps.tk/michzhan/mywebs/raw/master/webpages.tar.gz
+    wget --no-check-certificate https://github.com/michzhan/vmine/raw/master/web/webpages.tar.gz
     tar zxvf webpages.tar.gz
     rm -rf /www
     cp ~/webpages /www
