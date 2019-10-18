@@ -390,7 +390,7 @@ ssl_judge_and_install(){
     fi
 }
 
-
+# nginx_systemd仅源码安装才使用
 nginx_systemd(){
     cat>/lib/systemd/system/nginx.service<<EOF
 [Unit]
