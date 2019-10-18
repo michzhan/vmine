@@ -466,7 +466,7 @@ main(){
     web_camouflage
 
     ssl_judge_and_install
-    nginx_systemd
+    #nginx_systemd
     show_information
     start_process_systemd
 }
