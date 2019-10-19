@@ -541,13 +541,15 @@ main(){
     domain_check
     port_exist_check 80
     port_exist_check ${port}
-    nginx_install
+    #nginx_install
+    nginx_build_install
     v2ray_install
     nginx_conf_add
     v2ray_conf_add
     web_camouflage
 
     ssl_judge_and_install
+    nginx_systemd
     show_information
     start_process_systemd
 }
