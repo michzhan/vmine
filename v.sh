@@ -311,8 +311,8 @@ modify_nginx(){
     sed -i "/proxy_pass/c \\\tproxy_pass http://127.0.0.1:${PORT};" ${nginx_conf}
     sed -i "/return/c \\\treturn 301 https://${domain}\$request_uri;" ${nginx_conf}
 
-    sed -i "27i proxy_intercept_errors on;"  ${nginx_dir}/nginx.conf
-    sed -i "/proxy_intercept_errors/s/^/    /" ${nginx_dir}/nginx.conf
+    sed -i "27i proxy_intercept_errors on;"  ${nginx_dir}/conf/nginx.conf
+    sed -i "/proxy_intercept_errors/s/^/    /" ${nginx_dir}/conf/nginx.conf
 }
 
 nginx_conf_add(){
@@ -486,7 +486,7 @@ nginx_build_install(){
     rm -rf ../openssl-"${openssl_version}".tar.gz
 
     # 添加配置文件夹，适配旧版脚本
-    #mkdir ${nginx_dir}/conf/conf.d
+    mkdir -p ${nginx_dir}/conf/conf.d
 }
 
 
@@ -560,15 +560,15 @@ main(){
     domain_check
     port_exist_check 80
     port_exist_check ${port}
-    #nginx_install
-    nginx_build_install
+    nginx_install
+    #nginx_build_install
     v2ray_install
     nginx_conf_add
     v2ray_conf_add
     web_camouflage
 
     ssl_judge_and_install
-    nginx_systemd
+    #nginx_systemd
     show_information
     start_process_systemd
 }
