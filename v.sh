@@ -465,6 +465,7 @@ start_process_systemd(){
 main(){
     is_root
     port_alterid_set
+    random_number
     check_system
     dependency_install
     chrony_install
