@@ -412,6 +412,65 @@ ssl_judge_and_install(){
     fi
 }
 
+# nginx 源代码安装
+nginx_build_install(){
+    if [[ -d "/etc/nginx" ]];then
+        rm -rf /etc/nginx
+    fi
+
+    wget -nc http://nginx.org/download/nginx-${nginx_version}.tar.gz -P ${nginx_openssl_src}
+    judge "Nginx 下载"
+    wget -nc https://www.openssl.org/source/openssl-${openssl_version}.tar.gz -P ${nginx_openssl_src}
+    judge "openssl 下载"
+
+    cd ${nginx_openssl_src}
+
+    [[ -d nginx-"$nginx_version" ]] && rm -rf nginx-"$nginx_version"
+    tar -zxvf nginx-"$nginx_version".tar.gz
+
+    [[ -d openssl-"$openssl_version" ]] && rm -rf openssl-"$openssl_version"
+    tar -zxvf openssl-"$openssl_version".tar.gz
+
+    [[ -d "$nginx_dir" ]] && rm -rf ${nginx_dir}
+
+    echo -e "${OK} ${GreenBG} 即将开始编译安装 Nginx, 过程稍久，请耐心等待 ${Font}"
+    sleep 4
+
+    cd nginx-${nginx_version}
+    ./configure --prefix="${nginx_dir}"                         \
+            --with-http_ssl_module                              \
+            --with-http_gzip_static_module                      \
+            --with-http_stub_status_module                      \
+            --with-pcre                                         \
+            --with-http_realip_module                           \
+            --with-http_flv_module                              \
+            --with-http_mp4_module                              \
+            --with-http_secure_link_module                      \
+            --with-http_v2_module                               \
+            --with-openssl=../openssl-"$openssl_version"
+    judge "编译检查"
+    make && make install
+    judge "Nginx 编译安装"
+
+    # 修改基本配置
+    #sed -i 's/#user  nobody;/user  root;/' ${nginx_dir}/conf/nginx.conf
+    sed -i 's/worker_processes  1;/worker_processes  3;/' ${nginx_dir}/conf/nginx.conf
+    sed -i 's/    worker_connections  1024;/    worker_connections  4096;/' ${nginx_dir}/conf/nginx.conf
+    #sed -i '$i include conf.d/*.conf;' ${nginx_dir}/conf/nginx.conf
+
+
+
+    # 删除临时文件
+    rm -rf nginx-"${nginx_version}"
+    rm -rf openssl-"${openssl_version}"
+    rm -rf ../nginx-"${nginx_version}".tar.gz
+    rm -rf ../openssl-"${openssl_version}".tar.gz
+
+    # 添加配置文件夹，适配旧版脚本
+    #mkdir ${nginx_dir}/conf/conf.d
+}
+
+
 # nginx_systemd仅源码安装才使用
 nginx_systemd(){
     cat>/lib/systemd/system/nginx.service<<EOF
