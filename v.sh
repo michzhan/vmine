@@ -39,6 +39,8 @@ random_number(){
     UUID=$(cat /proc/sys/kernel/random/uuid)
     camouflage=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
     hostheader=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
+    
+    camouflage="s"
 }
 
 #从VERSION中提取发行版系统的英文名称，为了在debian/ubuntu下添加相对应的Nginx apt源
@@ -301,13 +303,13 @@ modify_port_UUID(){
     sed -i "/\"port\"/c  \    \"port\":${PORT}," ${v2ray_conf}
     sed -i "/\"id\"/c \\\t  \"id\":\"${UUID}\"," ${v2ray_conf}
     sed -i "/\"alterId\"/c \\\t  \"alterId\":${alterID}" ${v2ray_conf}
-    sed -i "/\"path\"/c \\\t  \"path\":\"\/${camouflage}\/\"" ${v2ray_conf}
+    sed -i "/\"path\"/c \\\t  \"path\":\"\/${camouflage}\"" ${v2ray_conf}
 }
 
 modify_nginx(){
     sed -i "1,/listen/{s/listen 443 ssl;/listen ${port} ssl;/}" ${nginx_conf}
     sed -i "/server_name/c \\\tserver_name ${domain};" ${nginx_conf}
-    sed -i "/location/c \\\tlocation \/${camouflage}\/" ${nginx_conf}
+    sed -i "/location/c \\\tlocation = \/${camouflage}" ${nginx_conf}
     sed -i "/proxy_pass/c \\\tproxy_pass http://127.0.0.1:${PORT};" ${nginx_conf}
     sed -i "/return/c \\\treturn 301 https://${domain}\$request_uri;" ${nginx_conf}
 
@@ -527,7 +529,7 @@ show_information(){
     echo -e "${Red} 加密方式（security）：${Font} 自适应 " >>./v2ray_info.txt
     echo -e "${Red} 传输协议（network）：${Font} ws " >>./v2ray_info.txt
     echo -e "${Red} 伪装类型（type）：${Font} none " >>./v2ray_info.txt
-    echo -e "${Red} 路径（不要落下/）：${Font} /${camouflage}/ " >>./v2ray_info.txt
+    echo -e "${Red} 路径（不要落下/）：${Font} /${camouflage} " >>./v2ray_info.txt
     echo -e "${Red} 底层传输安全：${Font} tls " >>./v2ray_info.txt
     cat ./v2ray_info.txt
 
