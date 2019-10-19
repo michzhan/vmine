@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #================================================================
-#	System Request:Debian 9+ (Ubuntu 18.04+/Centos 7+ not test)
-#	Dscription: V2ray ws+tls onekey
+#    System Request:Debian 9+ (Ubuntu 18.04+/Centos 7+ not test)
+#    Dscription: V2ray ws+tls onekey
 #   Reference:
 #       https://github.com/wulabing/V2Ray_ws-tls_bash_onekey
 #       https://github.com/dylanbai8/V2Ray_ws-tls_Website_onekey
@@ -30,9 +30,14 @@ nginx_dir="/etc/nginx"
 nginx_openssl_src="/usr/local/src"
 nginx_version="1.16.1"
 openssl_version="1.1.1d"
-#生成伪装路径
-camouflage=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
 
+#生成伪装路径
+random_number(){
+    let PORT=$RANDOM+10000
+    UUID=$(cat /proc/sys/kernel/random/uuid)
+    camouflage=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
+    hostheader=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
+}
 
 #从VERSION中提取发行版系统的英文名称，为了在debian/ubuntu下添加相对应的Nginx apt源
 source /etc/os-release
@@ -102,7 +107,7 @@ dependency_install(){
     else
        if [[ -f "/var/spool/cron/crontabs/root" ]];then
            # Do nothing
-	   echo ""
+       echo ""
        else
            touch /var/spool/cron/crontabs/root && chmod 600 /var/spool/cron/crontabs/root
            systemctl start cron && systemctl enable cron
@@ -152,18 +157,20 @@ chrony_install(){
     chronyc sourcestats -v
     chronyc tracking -v
     date
-    read -p "请确认时间是否准确,误差范围±3分钟(Y/N): " chrony_install
-    [[ -z ${chrony_install} ]] && chrony_install="Y"
-    case $chrony_install in
-        [yY][eE][sS]|[yY])
-            echo -e "${GreenBG} 继续安装 ${Font}"
-            sleep 2
-            ;;
-        *)
-            echo -e "${RedBG} 安装终止 ${Font}"
-            exit 2
-            ;;
-        esac
+    sleep 10
+    echo ""
+    #x read -p "请确认时间是否准确,误差范围±3分钟(Y/N): " chrony_install
+    #x [[ -z ${chrony_install} ]] && chrony_install="Y"
+    #x case $chrony_install in
+    #x     [yY][eE][sS]|[yY])
+    #x         echo -e "${GreenBG} 继续安装 ${Font}"
+    #x         sleep 2
+    #x         ;;
+    #x     *)
+    #x         echo -e "${RedBG} 安装终止 ${Font}"
+    #x         exit 2
+    #x         ;;
+    #x     esac
 }
 
 basic_optimization(){
@@ -183,7 +190,6 @@ basic_optimization(){
 
 
 domain_check(){
-    read -p "请输入你的域名信息(eg:www.wulabing.com):" domain
     domain_ip=`ping ${domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
     echo -e "${OK} ${GreenBG} 正在获取 公网ip 信息，请耐心等待 ${Font}"
     local_ip=`curl -4 ip.sb`
@@ -210,10 +216,17 @@ domain_check(){
 }
 
 port_alterid_set(){
-    read -p "请输入连接端口（default:443）:" port
+    echo -e "${Info} ${GreenBG} 【配置 1/3 】请输入你的域名信息(如:www.bing.com)，请确保域名A记录已正确解析至服务器IP ${Font}"
+    read -p "请输入：" domain
+    echo -e "${Info} ${GreenBG} 【配置 2/3 】请输入连接端口（默认:443 无特殊需求请直接按回车键） ${Font}"
+    read -p "请输入：" port
     [[ -z ${port} ]] && port="443"
-    read -p "请输入alterID（default:4）:" alterID
-    [[ -z ${alterID} ]] && alterID="4"
+    echo -e "${Info} ${GreenBG} 【配置 3/3 】请输入alterID（默认:16 无特殊需求请直接按回车键） ${Font}"
+    read -p "请输入：" alterID
+    [[ -z ${alterID} ]] && alterID="16"
+    echo -e "----------------------------------------------------------"
+    echo -e "${Info} ${GreenBG} 你输入的配置信息为 域名：${domain} 端口：${port} alterID：${alterID} ${Font}"
+    echo -e "----------------------------------------------------------"
 }
 
 port_exist_check(){
@@ -242,21 +255,21 @@ nginx_install(){
     ${INS} update
     ${INS} install nginx -y
     if [[ -d /etc/nginx ]];then
-		echo -e "${OK} ${GreenBG} nginx 安装完成 ${Font}"
-		sleep 2
-	else
-		echo -e "${Error} ${RedBG} nginx 安装失败 ${Font}"
-		exit 5
-	fi
+        echo -e "${OK} ${GreenBG} nginx 安装完成 ${Font}"
+        sleep 2
+    else
+        echo -e "${Error} ${RedBG} nginx 安装失败 ${Font}"
+        exit 5
+    fi
 
     # 修改基本配置
-    sed -i 's/#user  nobody;/user  root;/' ${nginx_dir}/nginx.conf
+    #sed -i 's/#user  nobody;/user  root;/' ${nginx_dir}/nginx.conf
     sed -i 's/worker_processes  1;/worker_processes  3;/' ${nginx_dir}/nginx.conf
     sed -i 's/    worker_connections  1024;/    worker_connections  4096;/' ${nginx_dir}/nginx.conf
-    sed -i '$i include conf.d/*.conf;' ${nginx_dir}/nginx.conf
+    #sed -i '$i include conf.d/*.conf;' ${nginx_dir}/nginx.conf
 
     # 添加配置文件夹，适配旧版脚本
-    mkdir ${nginx_dir}/conf.d
+    #x mkdir -p ${nginx_dir}/conf/conf.d
 }
 
 v2ray_install(){
@@ -283,8 +296,6 @@ v2ray_install(){
 }
 
 modify_port_UUID(){
-    let PORT=$RANDOM+10000
-    UUID=$(cat /proc/sys/kernel/random/uuid)
     sed -i "/\"port\"/c  \    \"port\":${PORT}," ${v2ray_conf}
     sed -i "/\"id\"/c \\\t  \"id\":\"${UUID}\"," ${v2ray_conf}
     sed -i "/\"alterId\"/c \\\t  \"alterId\":${alterID}" ${v2ray_conf}
@@ -297,7 +308,9 @@ modify_nginx(){
     sed -i "/location/c \\\tlocation \/${camouflage}\/" ${nginx_conf}
     sed -i "/proxy_pass/c \\\tproxy_pass http://127.0.0.1:${PORT};" ${nginx_conf}
     sed -i "/return/c \\\treturn 301 https://${domain}\$request_uri;" ${nginx_conf}
-    sed -i "27i \\\tproxy_intercept_errors on;"  ${nginx_dir}/nginx.conf
+
+    sed -i "27i proxy_intercept_errors on;"  ${nginx_dir}/nginx.conf
+    sed -i "/proxy_intercept_errors/s/^/    /" ${nginx_dir}/nginx.conf
 }
 
 nginx_conf_add(){
@@ -322,7 +335,7 @@ nginx_conf_add(){
         proxy_set_header Connection "upgrade";
         proxy_set_header Host \$http_host;
         }
-}
+    }
     server {
         listen 80;
         server_name serveraddr.com;
@@ -451,12 +464,12 @@ start_process_systemd(){
 
 main(){
     is_root
+    port_alterid_set
     check_system
     dependency_install
     chrony_install
     basic_optimization
     domain_check
-    port_alterid_set
     port_exist_check 80
     port_exist_check ${port}
     nginx_install
@@ -466,7 +479,8 @@ main(){
     web_camouflage
 
     ssl_judge_and_install
-    #nginx_systemd
     show_information
     start_process_systemd
 }
+
+#main
