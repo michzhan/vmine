@@ -30,6 +30,8 @@ nginx_dir="/etc/nginx"
 nginx_openssl_src="/usr/local/src"
 nginx_version="1.16.1"
 openssl_version="1.1.1d"
+pcre_version="8.43"
+zlib_version="1.2.11"
 
 #生成伪装路径
 random_number(){
@@ -85,7 +87,7 @@ check_system(){
 }
 
 dependency_install(){
-    ${INS} install -y wget git lsof bc unzip qrencode curl gnupg2 ca-certificates lsb-release
+    ${INS} install -y wget git lsof bc unzip qrencode curl gnupg2 ca-certificates lsb-release build-essential tree
 
     if [[ "${ID}" == "centos" ]];then
        ${INS} -y install crontabs
@@ -422,7 +424,14 @@ nginx_build_install(){
     judge "Nginx 下载"
     wget -nc https://www.openssl.org/source/openssl-${openssl_version}.tar.gz -P ${nginx_openssl_src}
     judge "openssl 下载"
-
+    
+    wget -nc https://ftp.pcre.org/pub/pcre/pcre-${pcre_version}.tar.gz -P ${nginx_openssl_src}
+    https://ftp.pcre.org/pub/pcre/pcre-8.42.tar.gz
+    judge "pcre 下载"
+    wget -nc https://www.zlib.net/zlib-${zlib_version}.tar.gz -P ${nginx_openssl_src}
+    judge "pcre 下载"
+    
+    
     cd ${nginx_openssl_src}
 
     [[ -d nginx-"$nginx_version" ]] && rm -rf nginx-"$nginx_version"
@@ -430,6 +439,14 @@ nginx_build_install(){
 
     [[ -d openssl-"$openssl_version" ]] && rm -rf openssl-"$openssl_version"
     tar -zxvf openssl-"$openssl_version".tar.gz
+    
+    [[ -d pcre-"$pcre_version" ]] && rm -rf pcre-"$pcre_version"
+    tar -zxvf pcre-"$pcre_version".tar.gz
+    
+    [[ -d zlib-"$zlib_version" ]] && rm -rf zlib-"$zlib_version"
+    tar -zxvf zlib-"$zlib_version".tar.gz
+    
+    
 
     [[ -d "$nginx_dir" ]] && rm -rf ${nginx_dir}
 
@@ -441,13 +458,15 @@ nginx_build_install(){
             --with-http_ssl_module                              \
             --with-http_gzip_static_module                      \
             --with-http_stub_status_module                      \
-            --with-pcre                                         \
             --with-http_realip_module                           \
             --with-http_flv_module                              \
             --with-http_mp4_module                              \
             --with-http_secure_link_module                      \
             --with-http_v2_module                               \
+            --with-pcre=../pcre-"$pcre_version"                 \
+            --with-zlib=../zlib-"zlib_version"                  \
             --with-openssl=../openssl-"$openssl_version"
+            
     judge "编译检查"
     make && make install
     judge "Nginx 编译安装"
