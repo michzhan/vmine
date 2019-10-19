@@ -365,7 +365,12 @@ web_camouflage(){
     tar zxvf webpages.tar.gz
     rm -rf /www
     cp -r ~/webpages /www
-    chmod -R 777 /www
+    
+    chgrp -R nginx /www
+    chown -R nginx /www
+    chmod -R g-w /www
+    chmod -R o-w /www
+    chmod -R o-x /www   
 }
 
 
