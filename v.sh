@@ -334,7 +334,7 @@ nginx_conf_add(){
         server_name           serveraddr.com;
         index index.html index.htm;
         root  /www;
-        error_page 400 = /400.html;
+        error_page 404 /404.html;
         location /ray/ 
         {
         proxy_redirect off;
