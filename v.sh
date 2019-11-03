@@ -315,6 +315,7 @@ modify_nginx(){
 
     sed -i "27i proxy_intercept_errors on;"  ${nginx_dir}/nginx.conf
     sed -i "/proxy_intercept_errors/s/^/    /" ${nginx_dir}/nginx.conf
+    sed -i "27i \ \ \ server_tokens off;"  ${nginx_dir}/nginx.conf
 }
 
 nginx_conf_add(){
