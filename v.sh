@@ -40,7 +40,7 @@ random_number(){
     camouflage=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
     hostheader=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
     
-    camouflage="s"
+    camouflage="ba14f3b6"
 }
 
 #从VERSION中提取发行版系统的英文名称，为了在debian/ubuntu下添加相对应的Nginx apt源
