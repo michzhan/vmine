@@ -233,11 +233,11 @@ port_alterid_set(){
     
     echo -e "${Info} ${GreenBG} 【配置 4/5 】请输入自定义UUID（无特殊需求请直接按回车键，随机产生UUID） ${Font}"
     read -p "请输入：" UUID
-    [[ -z ${UUID}]] && UUID="${d_UUID}"
+    [[ -z ${UUID} ]] && UUID="${d_UUID}"
 
     echo -e "${Info} ${GreenBG} 【配置 5/5 】请输入自定义路径（不需要/， 无特殊需求请直接按回车键，随机产生路径）${Font}"
     read -p "请输入：" camouflage
-    [[ -z ${camouflage}]] && camouflage="${d_camouflage}"
+    [[ -z ${camouflage} ]] && camouflage="${d_camouflage}"
 
     echo -e "----------------------------------------------------------"
     echo -e "${Info} ${GreenBG} 你输入的配置信息为 域名：${domain} 端口：${port} alterID：${alterID} ${Font}"
