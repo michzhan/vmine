@@ -429,7 +429,6 @@ nginx_build_install(){
     judge "openssl 下载"
     
     wget -nc https://ftp.pcre.org/pub/pcre/pcre-${pcre_version}.tar.gz -P ${nginx_openssl_src}
-    https://ftp.pcre.org/pub/pcre/pcre-8.42.tar.gz
     judge "pcre 下载"
     wget -nc https://www.zlib.net/zlib-${zlib_version}.tar.gz -P ${nginx_openssl_src}
     judge "pcre 下载"
@@ -457,28 +456,71 @@ nginx_build_install(){
     sleep 4
 
     cd nginx-${nginx_version}
-    ./configure --prefix="${nginx_dir}"                         \
-            --with-http_ssl_module                              \
-            --with-http_gzip_static_module                      \
-            --with-http_stub_status_module                      \
-            --with-http_realip_module                           \
-            --with-http_flv_module                              \
-            --with-http_mp4_module                              \
-            --with-http_secure_link_module                      \
-            --with-http_v2_module                               \
-            --with-pcre=../pcre-"$pcre_version"                 \
-            --with-zlib=../zlib-"zlib_version"                  \
-            --with-openssl=../openssl-"$openssl_version"
+    ./configure --prefix="${nginx_dir}"  \
+                --sbin-path=/usr/sbin/nginx  \
+                --modules-path=/usr/lib/nginx/modules  \
+                --conf-path="${nginx_dir}"/nginx.conf  \
+                --error-log-path=/var/log/nginx/error.log  \
+                --http-log-path=/var/log/nginx/access.log  \
+                --pid-path=/var/run/nginx.pid  \
+                --lock-path=/var/run/nginx.lock  \
+                --http-client-body-temp-path=/var/cache/nginx/client_temp  \
+                --http-proxy-temp-path=/var/cache/nginx/proxy_temp  \
+                --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp  \
+                --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp  \
+                --http-scgi-temp-path=/var/cache/nginx/scgi_temp  \
+                --user=nginx  \
+                --group=nginx  \
+                --with-compat  \
+                --with-file-aio  \
+                --with-threads  \
+                --with-http_addition_module  \
+                --with-http_auth_request_module  \
+                --with-http_dav_module  \
+                --with-http_flv_module  \
+                --with-http_gunzip_module  \
+                --with-http_gzip_static_module  \
+                --with-http_mp4_module  \
+                --with-http_random_index_module  \
+                --with-http_realip_module  \
+                --with-http_secure_link_module  \
+                --with-http_slice_module  \
+                --with-http_ssl_module  \
+                --with-http_stub_status_module  \
+                --with-http_sub_module  \
+                --with-http_v2_module  \
+                --with-mail  \
+                --with-mail_ssl_module  \
+                --with-stream  \
+                --with-stream_realip_module  \
+                --with-stream_ssl_module  \
+                --with-stream_ssl_preread_module  \
+                --with-cc-opt='-g -O2 -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2'  \
+                --with-ld-opt='-Wl,-Bsymbolic-functions -fPIE -pie -Wl,-z,relro -Wl,-z,now' \
+                --with-pcre="${nginx_openssl_src}"/pcre-"${pcre_version}" \
+                --with-zlib="${nginx_openssl_src}"/zlib-"${zlib_version}" \
+                --with-openssl="${nginx_openssl_src}"/openssl-"${openssl_version}"
             
     judge "编译检查"
     make && make install
     judge "Nginx 编译安装"
 
+    # link modules
+    ln -s /usr/lib/nginx/modules ${nginx_dir}/modules
+
+    # Add user/groups
+    adduser --system --home /nonexistent --shell /bin/false --no-create-home --disabled-login --disabled-password --gecos "nginx user" --group nginx
+
+    # creating nginx cache dir and set proper permission
+    mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/fastcgi_temp /var/cache/nginx/proxy_temp /var/cache/nginx/scgi_temp /var/cache/nginx/uwsgi_temp
+    chmod 700 /var/cache/nginx/*
+    chown nginx:root /var/cache/nginx/*
+
     # 修改基本配置
-    #sed -i 's/#user  nobody;/user  root;/' ${nginx_dir}/conf/nginx.conf
-    sed -i 's/worker_processes  1;/worker_processes  3;/' ${nginx_dir}/conf/nginx.conf
-    sed -i 's/    worker_connections  1024;/    worker_connections  4096;/' ${nginx_dir}/conf/nginx.conf
-    #sed -i '$i include conf.d/*.conf;' ${nginx_dir}/conf/nginx.conf
+    sed -i 's/#user  nobody;/user  nginx;/' ${nginx_dir}/nginx.conf
+    sed -i 's/worker_processes  1;/worker_processes  3;/' ${nginx_dir}/nginx.conf
+    sed -i 's/    worker_connections  1024;/    worker_connections  4096;/' ${nginx_dir}/nginx.conf
+    sed -i '$i include conf.d/*.conf;' ${nginx_dir}/nginx.conf
 
 
 
@@ -489,7 +531,7 @@ nginx_build_install(){
     rm -rf ../openssl-"${openssl_version}".tar.gz
 
     # 添加配置文件夹，适配旧版脚本
-    mkdir -p ${nginx_dir}/conf/conf.d
+    mkdir -p ${nginx_dir}/conf.d
 }
 
 
@@ -502,10 +544,10 @@ After=syslog.target network.target remote-fs.target nss-lookup.target
 
 [Service]
 Type=forking
-PIDFile=/etc/nginx/logs/nginx.pid
-ExecStartPre=/etc/nginx/sbin/nginx -t
-ExecStart=/etc/nginx/sbin/nginx -c ${nginx_dir}/nginx.conf
-ExecReload=/etc/nginx/sbin/nginx -s reload
+PIDFile=/var/run/nginx.pid
+ExecStartPre=/usr/sbin/nginx -t -c ${nginx_dir}/nginx.conf
+ExecStart=/usr/sbin/nginx -c ${nginx_dir}/nginx.conf
+ExecReload=/usr/sbin/nginx -s reload
 ExecStop=/bin/kill -s QUIT \$MAINPID
 PrivateTmp=true
 
@@ -514,6 +556,13 @@ WantedBy=multi-user.target
 EOF
 
 judge "Nginx systemd ServerFile 添加"
+
+
+# fix nginx bugs:
+# nginx.service: Failed to read PID from file /run/nginx.pid: Invalid argument
+mkdir /etc/systemd/system/nginx.service.d
+printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
+systemctl daemon-reload
 }
 
 
@@ -576,4 +625,38 @@ main(){
     start_process_systemd
 }
 
-#main
+main_build () {
+    is_root
+    port_alterid_set
+    random_number
+    check_system
+    dependency_install
+    chrony_install
+    basic_optimization
+    domain_check
+    port_exist_check 80
+    port_exist_check ${port}
+    #nginx_install
+    nginx_build_install
+    v2ray_install
+    nginx_conf_add
+    v2ray_conf_add
+    web_camouflage
+
+    ssl_judge_and_install
+    nginx_systemd
+    show_information
+    start_process_systemd
+}
+
+# Options of the scripts
+if [[ $# >0 ]]; then
+    key="$1"
+    case $key in
+        -b|--build)
+        main_build
+        ;;
+    esac
+else
+    main
+fi
