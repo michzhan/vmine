@@ -315,7 +315,7 @@ modify_nginx(){
 
     sed -i "27i proxy_intercept_errors on;"  ${nginx_dir}/nginx.conf
     sed -i "/proxy_intercept_errors/s/^/    /" ${nginx_dir}/nginx.conf
-    sed -i "27i \ \ \ server_tokens off;"  ${nginx_dir}/nginx.conf
+    sed -i "27i \ \ \ \ server_tokens off;"  ${nginx_dir}/nginx.conf
 }
 
 nginx_conf_add(){
@@ -520,7 +520,7 @@ nginx_build_install(){
     sed -i 's/#user  nobody;/user  nginx;/' ${nginx_dir}/nginx.conf
     sed -i 's/worker_processes  1;/worker_processes  3;/' ${nginx_dir}/nginx.conf
     sed -i 's/    worker_connections  1024;/    worker_connections  4096;/' ${nginx_dir}/nginx.conf
-    sed -i '$i include conf.d/*.conf;' ${nginx_dir}/nginx.conf
+    sed -i '$i \ \ \ \ include conf.d/*.conf;' ${nginx_dir}/nginx.conf
 
 
 
