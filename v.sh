@@ -36,8 +36,8 @@ zlib_version="1.2.11"
 #生成伪装路径
 random_number(){
     let PORT=$RANDOM+10000
-    UUID=$(cat /proc/sys/kernel/random/uuid)
-    camouflage=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
+    d_UUID=$(cat /proc/sys/kernel/random/uuid)
+    d_camouflage=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
     hostheader=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
     
     #camouflage="ba14f3b6"
@@ -220,16 +220,28 @@ domain_check(){
 }
 
 port_alterid_set(){
-    echo -e "${Info} ${GreenBG} 【配置 1/3 】请输入你的域名信息(如:www.bing.com)，请确保域名A记录已正确解析至服务器IP ${Font}"
+    echo -e "${Info} ${GreenBG} 【配置 1/5 】请输入你的域名信息(如:www.bing.com)，请确保域名A记录已正确解析至服务器IP ${Font}"
     read -p "请输入：" domain
-    echo -e "${Info} ${GreenBG} 【配置 2/3 】请输入连接端口（默认:443 无特殊需求请直接按回车键） ${Font}"
+    
+    echo -e "${Info} ${GreenBG} 【配置 2/5 】请输入连接端口（默认:443 无特殊需求请直接按回车键） ${Font}"
     read -p "请输入：" port
     [[ -z ${port} ]] && port="443"
-    echo -e "${Info} ${GreenBG} 【配置 3/3 】请输入alterID（默认:16 无特殊需求请直接按回车键） ${Font}"
+    
+    echo -e "${Info} ${GreenBG} 【配置 3/5 】请输入alterID（默认:16 无特殊需求请直接按回车键） ${Font}"
     read -p "请输入：" alterID
     [[ -z ${alterID} ]] && alterID="16"
+    
+    echo -e "${Info} ${GreenBG} 【配置 4/5 】请输入自定义UUID（无特殊需求请直接按回车键，随机产生UUID） ${Font}"
+    read -p "请输入：" UUID
+    [[ -z ${UUID}]] && UUID="${d_UUID}"
+
+    echo -e "${Info} ${GreenBG} 【配置 5/5 】请输入自定义路径（不需要/， 无特殊需求请直接按回车键，随机产生路径）${Font}"
+    read -p "请输入：" camouflage
+    [[ -z ${camouflage}]] && camouflage="${d_camouflage}"
+
     echo -e "----------------------------------------------------------"
     echo -e "${Info} ${GreenBG} 你输入的配置信息为 域名：${domain} 端口：${port} alterID：${alterID} ${Font}"
+    echo -e "${Info} ${GreenBG} 你输入的配置信息为 UUID：${UUID} 路径：${camouflage} ${Font}"
     echo -e "----------------------------------------------------------"
 }
 
@@ -605,8 +617,8 @@ start_process_systemd(){
 
 main(){
     is_root
-    port_alterid_set
     random_number
+    port_alterid_set
     check_system
     dependency_install
     chrony_install
@@ -629,8 +641,8 @@ main(){
 
 main_build () {
     is_root
-    port_alterid_set
     random_number
+    port_alterid_set
     check_system
     dependency_install
     chrony_install
